@@ -10,6 +10,10 @@ var responseCodes = simpleResponse.CODES;
 var fs = require('fs');
 var fsutil = require('ixming-base').FileUtil;
 
+var serverConfig = {
+	port : 8089
+};
+
 fs.readdir('./modules', function(err, files) {
     for (index in files) {
         var fileName = files[index];
@@ -50,7 +54,6 @@ function startServer(callback) {
             startServer(callback);
         });
 }
-
 
 // common error - unknown method
 function unKnownMethod(req, res, method) {

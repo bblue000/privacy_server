@@ -10,6 +10,10 @@ var responseCodes = simpleResponse.CODES;
 var fs = require('fs');
 var fsutil = require('ixming-base').FileUtil;
 
+var serverConfig = {
+	port : 8089
+};
+
 fs.readdir('./modules', function(err, files) {
     for (index in files) {
         var fileName = files[index];
@@ -41,7 +45,7 @@ router.unKnownMethod(function(req, res, method) {
 
 // start server and make sure that it'll always restart
 function startServer(callback) {
-    http.createServer(callback).listen(80)
+    http.createServer(callback).listen(serverConfig.port)
 		.on('error', function(e){
 			console.log('error: ' + e);
 		})
