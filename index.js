@@ -32,14 +32,14 @@ fs.readdir('./modules', function(err, files) {
     startServer(router);
 });
 
-router.unKnownRoute(function(req, res, method, path) {
-    console.log('unKnownRoute path = ' + path);
+router.unKnownRoute(function(req, res, extras) {
+    console.log('unKnownRoute extras = ' + extras);
     error404(req, res);
 });
 
-router.unKnownMethod(function(req, res, method) {
-    console.log('unKnownMethod method = ' + method);
-    unKnownMethod(req, res, method);
+router.unKnownMethod(function(req, res, extras) {
+    console.log('unKnownMethod extras = ', extras);
+    unKnownMethod(req, res, extras);
 });
 
 
@@ -56,16 +56,16 @@ function startServer(callback) {
 }
 
 // common error - unknown method
-function unKnownMethod(req, res, method) {
+function unKnownMethod(req, res, extras) {
     res.writeHead(500, {'content-type': 'application/json'});
-    var responseContent = simpleResponse.asSimpleJson(500, '无法识别的请求方法：' + (method || '-'));
+    var responseContent = simpleResponse.asSimpleJson(500, '无法识别的请求方法：' + (extras || '-'));
     console.log(responseContent);
     res.write(responseContent);
     res.end();
 };
 
 // common error 404
-function error404(req, res) {
+function error404(req, res, extras) {
     res.writeHead(404, {'content-type': 'application/json'});
     var responseContent = simpleResponse.asSimpleJson(404, '没有此接口');
     res.write(responseContent);
