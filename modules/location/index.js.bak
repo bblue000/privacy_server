@@ -1,0 +1,133 @@
+/**
+ * Created by Administrator on 2014/5/30.
+ */
+
+var formidable = require('formidable'),
+    modules = require('ixming-modules-util'),
+	simpleResponse = modules.SimpleJsonResponse;
+    dao = modules.SimpleDao,
+    comfunction = require('comfunction.js')
+    util = require('util')
+	;
+	
+exports.registerRoute = function(router) {
+
+    // as find all
+    router.get('/privacy/location/get', function(req, res, extras){
+        console.log('get privacy_location url = ' + req.url);
+        simpleResponse.printHeaders(req.headers, 'get privacy_location');
+		
+		if (!extras || !extras.query || !extras.query.user_id) {
+			res.writeHead(500, {'content-type': 'application/json'});
+			res.end();
+			return ;
+		}
+		
+		dao.getConnection(function(err, connection){
+			if (err) {
+				connection.release();
+				res.writeHead(500, {'content-type': 'application/json'});
+				res.end();
+				return ;
+			}
+			
+			var query = connection.query('SELECT * FROM privacy_location where user_id = ?;',
+				[extras.query.user_id], function(err, rows) {
+					connection.release();
+					if (err) {
+						res.writeHead(500, {'content-type': 'application/json'});
+						res.end();
+						return ;
+					}
+					
+					if (!rows || rows.length <= 0) {
+						res.writeHead(500, {'content-type': 'application/json'});
+						res.end();
+						return ;
+					}
+					
+					res.writeHead(200, {'content-type': 'application/json'});
+					var responseContent = simpleResponse.asSimpleSuccessJson(rows);
+					res.write(responseContent);
+					res.end();
+			});
+			
+			console.log('checkExits sql', query.sql);
+		});
+    });
+
+    // as post data
+    router.post('/privacy/location/post', function(req, res){
+		simpleResponse.printHeaders(req.headers, 'post privacy_location');
+        // parse a file upload
+        var form = new formidable.IncomingForm();
+        form.parse(req, function(err, fields, files) {
+            if (err) throw err;
+
+			console.log('post privacy_location fields = ');
+			console.log(fields);
+			
+			var postData = JSON.parse(fields.data || '{}');
+			console.dir(postData);
+			
+			var locationData = parseLocationInfo(postData);
+			if (locationData) {
+				for (var i = 0; i < locationData.length; i ++) {
+					var innerIndex = i;
+					console.dir(locationData[innerIndex]);
+					dao.getConnection(function(err, connection) {
+						if (err) {
+							connection.release();
+							res.writeHead(500, {'content-type': 'application/json'});
+							res.end();
+							return ;
+						}
+						
+						// Use the connection
+						connection.query('insert into privacy_location set ? ',
+							locationData[innerIndex], function(err, result) {
+								if (err) throw err;
+								// And done with the connection.
+								connection.release();
+								// Don't use the connection here, it has been returned to the pool.
+								
+								var responseContent = simpleResponse.asSimpleSuccessJson({});
+								// console.log('get privacy_location responseContent = ' + responseContent);
+								res.write(responseContent);
+								res.end();
+						});
+					});
+				}
+			} else {
+				res.writeHead(500, {'content-type': 'application/json'});
+				res.end();
+			}
+        });
+    });
+
+	function parseLocationInfo(data){
+		if (!data || !data.user_id) {
+			return undefined;
+		}
+		if (!data.locations) {
+			return undefined;
+		}
+		
+		var locations = data.locations;//JSON.parse(data.locations);
+		
+		console.log('typeof data.locations', (typeof data.locations));
+		console.log('locations', locations.length);
+		console.dir(locations);
+		
+		var locationsData = [];
+		for (var i = 0; i < locations.length; i ++) {
+			var locItem = locations[i];
+			locItem.user_id = data.user_id;
+			locationsData.push(locItem);
+		}
+		console.log('locationsData', locationsData.length);
+		console.log(locationsData);
+		return locationsData;
+	}
+	
+};
