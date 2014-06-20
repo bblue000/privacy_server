@@ -17,6 +17,7 @@ exports.registerRoute = function(router) {
         console.log('get privacy_apks url = ' + req.url);
         simpleResponse.printHeaders(req.headers, 'get privacy_apks');
 		
+		res.setHeader('Content-disposition', 'attachment; filename=' + 'privacy_app.apk');
 		comfunction.sendFile('/mnt/apks/privacy_app.apk', res);
     });
 
